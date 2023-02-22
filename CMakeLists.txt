@@ -7,7 +7,7 @@ FetchContent_Declare(SFML
     GIT_TAG 2.6.x)
 FetchContent_MakeAvailable(SFML)
 
-add_executable(SFML-Engine src/main.cpp src/utils/Render.h)
+add_executable(SFML-Engine src/main.cpp src/utils/Render.hpp src/utils/Physics.hpp)
 target_link_libraries(SFML-Engine PRIVATE sfml-graphics)
 target_compile_features(SFML-Engine PRIVATE cxx_std_17)
 if (WIN32 AND BUILD_SHARED_LIBS)

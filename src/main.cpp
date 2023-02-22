@@ -1,6 +1,16 @@
 #include <SFML/Graphics.hpp>
 #include "utils/Render.hpp"
 
+static sf::Color getRainbow(float t)
+{
+    const float r = sin(t);
+    const float g = sin(t + 0.33f * 2.0f * (3.141592653));
+    const float b = sin(t + 0.66f * 2.0f * (3.141592653));
+    return {static_cast<uint8_t>(255.0f * r * r),
+            static_cast<uint8_t>(255.0f * g * g),
+            static_cast<uint8_t>(255.0f * b * b)};
+}
+
 int main()
 {
     auto window = sf::RenderWindow{ { (unsigned int) window_x, (unsigned int) window_y }, "SFML Engine" };
@@ -11,7 +21,7 @@ int main()
 
 
     physics.setSimulationUpdateRate(60);
-    physics.setSubStepCount(8);
+    physics.setSubStepCount(10);
     physics.setConstraint({window_x * 0.5f, window_y * 0.5f}, window_y / 2);
 
     sf::Clock clock;
@@ -24,9 +34,9 @@ int main()
                 clock.restart();
                 const float t = physics.getTime();
                 const float angle = 1.0f * sin(t) + (3.141592653f) * 0.5f;
-                auto& object = physics.addObject({window_x / 2, window_y - (window_y - 128)}, 10.0f);
+                auto& object = physics.addObject({window_x / 2, window_y - (window_y - 128)}, 15.0f);
                 physics.setObjectVelocity(object, (1200.0f * 1) * sf::Vector2f{(float) cos(angle), (float) sin(angle)});
-
+                object.color = getRainbow(t);
             }
             if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
             {

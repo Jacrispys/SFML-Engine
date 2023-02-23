@@ -54,7 +54,7 @@ public:
         return objects.emplace_back(pos, radius);
     }
 
-    [[nodiscard]] const std::vector<RigidObject> &getObjects() const {
+    [[nodiscard]] std::vector<RigidObject> getObjects() const {
         return objects;
     }
 
@@ -104,6 +104,10 @@ public:
     [[nodiscard]]
     float getTime() const {
         return time;
+    }
+
+    void clearObjects() {
+        objects.clear();
     }
 
 private:

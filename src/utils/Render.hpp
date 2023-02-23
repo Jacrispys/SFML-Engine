@@ -27,6 +27,7 @@ public:
         circle.setPointCount(32);
         circle.setOrigin(1.0f, 1.0f);
         const auto& objects = physics.getObjects();
+        //std::cout << objects.size() << std::endl;
         for (const auto& obj : objects) {
             circle.setPosition(obj.pos_now);
             circle.setScale(obj.radius, obj.radius);

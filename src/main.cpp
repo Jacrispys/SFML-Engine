@@ -25,18 +25,42 @@ int main()
     physics.setConstraint({window_x * 0.5f, window_y * 0.5f}, window_y / 2);
 
     sf::Clock clock;
+    sf::Clock frameDelay;
+    sf::Font font;
+    sf::Text text;
+
+    if (!font.loadFromFile("../src/resources/dealerplate.otf")) {
+        std::cout << "Error Loading Font!" << std::endl;
+    } else {
+        text.setFont(font);
+        text.setCharacterSize(24);
+        text.setFillColor(sf::Color::White);
+        text.setPosition(5.0f, 0.0f);
+    }
 
     while (window.isOpen())
     {
+        double delay = frameDelay.getElapsedTime().asMilliseconds() / 16.67;
+        int objectCount = physics.getObjectsCount();
+        int fps = 1000.0f / (delay * 16.67);
+        std::string display = "Object Count: " + std::to_string(objectCount) + "\nFrame Delay: " + std::to_string(delay) + "ms\nFPS: " +
+                std::to_string(fps);
+        text.setString(display);
+        frameDelay.restart();
+
+        if (clock.getElapsedTime().asSeconds() >= 0.0025f) {
+            clock.restart();
+            const float t = physics.getTime();
+            const float angle = 1.0f * sin(t) + (3.141592653f) * 0.5f;
+            auto& object = physics.addObject({window_x / 2, window_y - (window_y - 128)}, 3.0f);
+            physics.setObjectVelocity(object, (1200.0f * 1) * sf::Vector2f{(float) cos(angle), (float) sin(angle)});
+            object.color = getRainbow(t);
+        }
         for (auto event = sf::Event{}; window.pollEvent(event);)
         {
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) && clock.getElapsedTime().asSeconds() >= 0.025f) {
-                clock.restart();
-                const float t = physics.getTime();
-                const float angle = 1.0f * sin(t) + (3.141592653f) * 0.5f;
-                auto& object = physics.addObject({window_x / 2, window_y - (window_y - 128)}, 15.0f);
-                physics.setObjectVelocity(object, (1200.0f * 1) * sf::Vector2f{(float) cos(angle), (float) sin(angle)});
-                object.color = getRainbow(t);
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+                std::cout << physics.getObjects().size() << std::endl;
+                physics.clearObjects();
             }
             if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
             {
@@ -47,6 +71,7 @@ int main()
         physics.update();
         window.clear(sf::Color(51, 54, 59, 100));
         render.render(physics);
+        window.draw(text);
         window.display();
     }
 

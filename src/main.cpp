@@ -67,7 +67,7 @@ int main()
         frameDelay.restart();
 
 
-        if (clock.getElapsedTime().asSeconds() >= spawn_delay) {
+        if (clock.getElapsedTime().asSeconds() >= spawn_delay && physics.getObjectsCount() < 1000) {
             clock.restart();
             const float t = physics.getTime();
             const float angle = 1.0f * sin(t) + (3.141592653f) * 0.5f;

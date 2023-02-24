@@ -60,20 +60,10 @@ struct Cell {
     sf::Vector2f cell_pos;
     uint32_t cell_id;
     sf::Vector2i grid_map_pos;
-    std::vector<RigidObject> objects;
+    std::vector<int> objects;
 
-    void updateCell(const std::vector<RigidObject> &object) {
-        objects.clear();
-        for (auto &obj: object) {
-            sf::Vector2f cellX = {((float) grid_map_pos.x * cell_size_x),
-                                  ((float) grid_map_pos.x * cell_size_x + cell_size_x)};
-            sf::Vector2f cellY = {((float) grid_map_pos.y * cell_size_y),
-                                  ((float) grid_map_pos.y * cell_size_y + cell_size_y)};
-            if ((obj.pos_now.x >= cellX.x && obj.pos_now.x <= cellX.y) &&
-                (obj.pos_now.y >= cellY.x && obj.pos_now.y <= cellY.y)) {
-                objects.emplace_back(obj);
-            }
-        }
+    void updateCell(const RigidObject &object) {
+        objects.emplace_back(object.object_id);
     }
 };
 
@@ -82,13 +72,14 @@ struct Grid {
     std::vector<Cell> cells;
     sf::Vector2f cell_size;
     sf::Vector2i window_size;
-    int width = window_size.x / cell_size.x;
-    int height = window_size.y / cell_size.y;
 
     Grid() = default;
 
     Grid(sf::Vector2f _cell_size, sf::Vector2i _window_size)
             : cell_size{_cell_size}, window_size{_window_size} {}
+
+    int width = window_size.x / (int) cell_size.x;
+    int height = window_size.y / (int) cell_size.y;
 
     void defineGrid() {
         int rows = window_size.x / cell_size.x;
@@ -107,17 +98,15 @@ struct Grid {
         std::cout << "Num Cells: " << cells.size() << std::endl;
     }
 
-    void cellUpdate(std::vector<RigidObject> objects) {
-        for (Cell cell : cells) {
-            cell.updateCell(objects);
+    void cellUpdate(const std::vector<RigidObject>& objects) const {
+        for (RigidObject obj : objects) {
+            Cell cell = getCellByMap((int) obj.pos_now.x / (int) cell_size.x, (int) obj.pos_now.y / (int) cell_size.y);
+            cell.updateCell(obj);
         }
     }
 
     [[nodiscard]] Cell getCellByMap(int x, int y) const {
-        for (Cell cell: getCells()) {
-            if (cell.grid_map_pos.x == x && cell.grid_map_pos.y == y) return cell;
-        }
-        return getCells()[0];
+        return getCells()[((x + y) + y * width)];
     }
 
     [[nodiscard]] std::vector<Cell> getCells() const {
@@ -149,9 +138,9 @@ public:
     void update() {
         time += frame_dt;
         const float step_dt = getStepDt();
+        grid->cellUpdate(objects);
 
         for (uint32_t i{sub_steps}; i--;) {
-            //grid->cellUpdate(objects);
             applyGravity();
             checkCollisions(step_dt);
             //check_collisions_grid();
@@ -240,11 +229,14 @@ private:
     void check_collisions_grid() {
         for (int x{1}; x < grid->width - 1; ++x) {
             for (int y{1}; y < grid->height - 1; ++y) {
+                std::cout << x << "," << y << std::endl;
                 Cell current_cell = grid->getCellByMap(x, y);
+                if (current_cell.objects.empty()) continue;
 
                 for (int dx{-1}; dx <= 1; ++dx) {
                     for (int dy{-1}; dy <= 1; ++dy) {
                         Cell other_cell = grid->getCellByMap(x + dx, y + dy);
+                        if (other_cell.objects.empty()) continue;
                         check_cells_collision(current_cell, other_cell);
                     }
                 }
@@ -256,9 +248,11 @@ private:
     void check_cells_collision(Cell &cell1, Cell &cell2) {
         for (auto &obj_1: cell1.objects) {
             for (auto &obj_2: cell2.objects) {
-                if (obj_1.object_id != obj_2.object_id) {
-                    if (collide(obj_1, obj_2)) {
-                        solve_collisions(obj_1, obj_2);
+                if (objects[obj_1].object_id != objects[obj_2].object_id) {
+                    if (collide(objects[obj_1], objects[obj_2])) {
+                        solve_collisions(objects[obj_1], objects[obj_2]);
+                        cell1.objects.clear();
+                        cell2.objects.clear();
                     }
                 }
             }
@@ -274,6 +268,7 @@ private:
     }
 
     static void solve_collisions(RigidObject object_1, RigidObject object_2) {
+        std::cout << "solve" << std::endl;
         const float response_coef = 0.75f;
         const sf::Vector2f v = object_1.pos_now - object_2.pos_now;
         const float dist2 = v.x * v.x + v.y * v.y;

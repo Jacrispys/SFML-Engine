@@ -13,16 +13,34 @@ static sf::Color getRainbow(float t)
 
 int main()
 {
-    auto window = sf::RenderWindow{ { (unsigned int) window_x, (unsigned int) window_y }, "SFML Engine" };
-    window.setFramerateLimit(60);
+    constexpr uint32_t window_x = 1000;
+    constexpr uint32_t window_y = 1000;
+    const uint32_t frame_rate = 60;
 
-    Physics physics;
+    const float spawn_delay = 0.025f;
+    const float spawn_speed = 1200.0f;
+    const sf::Vector2f spawn_pos = {(float) window_x / 2, window_y - (window_y - 128)};
+    const float object_radius = 10.0f;
+
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 1;
+
+    auto window = sf::RenderWindow{ sf::VideoMode{ window_x, window_y }, "SFML Engine", sf::Style::Default, settings};
+    window.setFramerateLimit(frame_rate);
+
+    Grid* grid = new Grid{{object_radius, object_radius},
+              {(int) window_x, (int) window_y}};
+    grid->defineGrid();
+
+    Physics physics{grid};
     Render render{window};
+
+
 
 
     physics.setSimulationUpdateRate(60);
     physics.setSubStepCount(10);
-    physics.setConstraint({window_x * 0.5f, window_y * 0.5f}, window_y / 2);
+    physics.setConstraint({window_x * 0.5f, window_y * 0.5f}, (float) window_y / 2);
 
     sf::Clock clock;
     sf::Clock frameDelay;
@@ -48,14 +66,16 @@ int main()
         text.setString(display);
         frameDelay.restart();
 
-        if (clock.getElapsedTime().asSeconds() >= 0.0025f) {
+
+        if (clock.getElapsedTime().asSeconds() >= spawn_delay) {
             clock.restart();
             const float t = physics.getTime();
             const float angle = 1.0f * sin(t) + (3.141592653f) * 0.5f;
-            auto& object = physics.addObject({window_x / 2, window_y - (window_y - 128)}, 3.0f);
-            physics.setObjectVelocity(object, (1200.0f * 1) * sf::Vector2f{(float) cos(angle), (float) sin(angle)});
+            auto& object = physics.addObject(spawn_pos, object_radius);
+            physics.setObjectVelocity(object, (spawn_speed * 1) * sf::Vector2f{(float) cos(angle), (float) sin(angle)});
             object.color = getRainbow(t);
         }
+
         for (auto event = sf::Event{}; window.pollEvent(event);)
         {
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {

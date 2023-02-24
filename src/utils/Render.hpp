@@ -5,14 +5,12 @@
 #include <SFML/Graphics.hpp>
 #include "Physics.hpp"
 
-float window_x = 1920.0f;
-float window_y = 1080.0f;
-
 class Render {
 public:
     explicit Render(sf::RenderTarget &target) : m_target{target} {
     }
     void render(const Physics& physics) const {
+
         // Constrain render window
         const sf::Vector3f constraint = physics.getConstraint();
         sf::CircleShape bg{constraint.z};
@@ -27,7 +25,6 @@ public:
         circle.setPointCount(32);
         circle.setOrigin(1.0f, 1.0f);
         const auto& objects = physics.getObjects();
-        //std::cout << objects.size() << std::endl;
         for (const auto& obj : objects) {
             circle.setPosition(obj.pos_now);
             circle.setScale(obj.radius, obj.radius);
@@ -35,6 +32,8 @@ public:
             m_target.draw(circle);
         }
 
+
+        // Render Grid
     };
 
 private:

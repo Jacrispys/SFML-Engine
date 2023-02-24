@@ -139,11 +139,11 @@ public:
     void update() {
         time += frame_dt;
         const float step_dt = getStepDt();
-        grid->cellUpdate(objects);
+        //grid->cellUpdate(objects);
 
         for (uint32_t i{sub_steps}; i--;) {
             applyGravity();
-            checkCollisions(step_dt);
+            //checkCollisions(step_dt);
             check_collisions_grid();
             applyConstraint();
             updateObjects(step_dt);
@@ -228,16 +228,18 @@ private:
 
 
     void check_collisions_grid() {
-                for(Cell current_cell : grid->getCells()) {
-                    if (current_cell.objects.empty()) continue;
-                    for (int dx{-1}; dx <= 1; ++dx) {
-                        for (int dy{-1}; dy <= 1; ++dy) {
-                            Cell other_cell = grid->getCellByMap(current_cell.grid_map_pos.x + dx, current_cell.grid_map_pos.y + dy);
-                            if (other_cell.objects.empty()) continue;
-                            check_cells_collision(current_cell, other_cell);
-                        }
-                    }
+        for (Cell current_cell: grid->getCells()) {
+            if (current_cell.objects.size() < 51) return;
+            std::cout << current_cell.objects.size() << std:: endl;
+            for (int dx{-1}; dx <= 1; ++dx) {
+                for (int dy{-1}; dy <= 1; ++dy) {
+                    Cell other_cell = grid->getCellByMap(current_cell.grid_map_pos.x + dx,
+                                                         current_cell.grid_map_pos.y + dy);
+                    if (other_cell.objects.empty()) continue;
+                    check_cells_collision(current_cell, other_cell);
                 }
+            }
+        }
     }
 
 

@@ -62,8 +62,8 @@ struct Cell {
     sf::Vector2i grid_map_pos;
     std::vector<int> objects;
 
-    void updateCell(const RigidObject &object) {
-        objects.emplace_back(object.object_id);
+    void updateCell(int index) {
+        objects.emplace_back(index);
     }
 };
 
@@ -99,9 +99,10 @@ struct Grid {
     }
 
     void cellUpdate(const std::vector<RigidObject>& objects) const {
-        for (RigidObject obj : objects) {
-            Cell cell = getCellByMap((int) obj.pos_now.x / (int) cell_size.x, (int) obj.pos_now.y / (int) cell_size.y);
-            cell.updateCell(obj);
+        for (int i = 0; i < objects.size(); i++) {
+            sf::Vector2f pos_now = objects[i].pos_now;
+            Cell cell = getCellByMap((int) pos_now.x / (int) cell_size.x, (int) pos_now.y / (int) cell_size.y);
+            cell.updateCell(objects[i].object_id);
         }
     }
 
@@ -143,7 +144,7 @@ public:
         for (uint32_t i{sub_steps}; i--;) {
             applyGravity();
             checkCollisions(step_dt);
-            //check_collisions_grid();
+            check_collisions_grid();
             applyConstraint();
             updateObjects(step_dt);
         }
@@ -227,21 +228,16 @@ private:
 
 
     void check_collisions_grid() {
-        for (int x{1}; x < grid->width - 1; ++x) {
-            for (int y{1}; y < grid->height - 1; ++y) {
-                std::cout << x << "," << y << std::endl;
-                Cell current_cell = grid->getCellByMap(x, y);
-                if (current_cell.objects.empty()) continue;
-
-                for (int dx{-1}; dx <= 1; ++dx) {
-                    for (int dy{-1}; dy <= 1; ++dy) {
-                        Cell other_cell = grid->getCellByMap(x + dx, y + dy);
-                        if (other_cell.objects.empty()) continue;
-                        check_cells_collision(current_cell, other_cell);
+                for(Cell current_cell : grid->getCells()) {
+                    if (current_cell.objects.empty()) continue;
+                    for (int dx{-1}; dx <= 1; ++dx) {
+                        for (int dy{-1}; dy <= 1; ++dy) {
+                            Cell other_cell = grid->getCellByMap(current_cell.grid_map_pos.x + dx, current_cell.grid_map_pos.y + dy);
+                            if (other_cell.objects.empty()) continue;
+                            check_cells_collision(current_cell, other_cell);
+                        }
                     }
                 }
-            }
-        }
     }
 
 
